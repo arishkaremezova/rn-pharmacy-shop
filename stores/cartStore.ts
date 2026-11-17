@@ -1,84 +1,65 @@
 import { create } from 'zustand';
-import { CartLine, Product } from '../types/product';
 import { useShallow } from 'zustand/react/shallow';
+import { CartLine, Drug } from '../types/drug';
 
 interface CartState {
   lines: Record<string, CartLine>;
-
-  add: (product: Product, quantity?: number) => void;
-  remove: (productId: string) => void;
-  increment: (productId: string) => void;
-  decrement: (productId: string) => void;
+  add: (drug: Drug) => void;
+  remove: (drugId: string) => void;
+  increment: (drugId: string) => void;
+  decrement: (drugId: string) => void;
   clear: () => void;
 }
 
 export const useCartStore = create<CartState>((set) => ({
   lines: {},
 
-  add: (product, quantity = 1) =>
+  add: (drug) =>
     set((state) => {
-      const existing = state.lines[product.id];
+      const quantity = (state.lines[drug.id]?.quantity ?? 0) + 1;
+      if (quantity > drug.stock) return state;
+      return { lines: { ...state.lines, [drug.id]: { drug, quantity } } };
+    }),
+
+  remove: (drugId) =>
+    set((state) => {
+      const lines = { ...state.lines };
+      delete lines[drugId];
+      return { lines };
+    }),
+
+  increment: (drugId) =>
+    set((state) => {
+      const line = state.lines[drugId];
+      if (!line || line.quantity >= line.drug.stock) return state;
       return {
         lines: {
           ...state.lines,
-          [product.id]: existing
-            ? { ...existing, quantity: existing.quantity + quantity }
-            : { product, quantity },
+          [drugId]: { ...line, quantity: line.quantity + 1 },
         },
       };
     }),
 
-  remove: (productId) =>
+  decrement: (drugId) =>
     set((state) => {
-      const { [productId]: _removed, ...rest } = state.lines;
-      return { lines: rest };
-    }),
-
-  increment: (productId) =>
-    set((state) => {
-      const line = state.lines[productId];
+      const line = state.lines[drugId];
       if (!line) return state;
-      return {
-        lines: {
-          ...state.lines,
-          [productId]: { ...line, quantity: line.quantity + 1 },
-        },
-      };
-    }),
-
-  decrement: (productId) =>
-    set((state) => {
-      const line = state.lines[productId];
-      if (!line) return state;
-      // Если количество станет 0 — просто удаляем позицию
-      if (line.quantity <= 1) {
-        const { [productId]: _removed, ...rest } = state.lines;
-        return { lines: rest };
+      const lines = { ...state.lines };
+      if (line.quantity === 1) {
+        delete lines[drugId];
+      } else {
+        lines[drugId] = { ...line, quantity: line.quantity - 1 };
       }
-      return {
-        lines: {
-          ...state.lines,
-          [productId]: { ...line, quantity: line.quantity - 1 },
-        },
-      };
+      return { lines };
     }),
 
   clear: () => set({ lines: {} }),
 }));
 
-// ---------- Селекторы ----------
-export const selectCartCount = (s: CartState): number =>
-  Object.values(s.lines).reduce((sum, line) => sum + line.quantity, 0);
+export const selectCartCount = (state: CartState): number =>
+  Object.values(state.lines).reduce((sum, line) => sum + line.quantity, 0);
 
-export const selectCartTotal = (s: CartState): number =>
-  Object.values(s.lines).reduce(
-    (sum, line) => sum + line.product.price * line.quantity,
-    0,
-  );
+export const selectCartLines = (state: CartState): CartLine[] =>
+  Object.values(state.lines);
 
-export const selectCartLines = (s: CartState): CartLine[] =>
-  Object.values(s.lines);
-
-// ---------- Хуки с shallow-сравнением ----------
-export const useCartLines = () =>
-  useCartStore(useShallow(selectCartLines));
+export const useCartLines = () => useCartStore(useShallow(selectCartLines));
