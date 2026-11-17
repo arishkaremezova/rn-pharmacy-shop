@@ -1,40 +1,21 @@
-import { Pressable, Text, View, StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../types/navigation';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { selectCartCount, useCartStore } from '../stores/cartStore';
 
 export default function HeaderCartButton() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const count = useCartStore(selectCartCount);
 
   return (
-    <Pressable onPress={() => navigation.navigate('Cart')} style={styles.wrap}>
-      <Text style={styles.icon}>🛒</Text>
-      {count > 0 && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{count}</Text>
-        </View>
-      )}
+    <Pressable onPress={() => router.push('/cart')} style={styles.wrap} accessibilityRole="button" accessibilityLabel={`Корзина, количество: ${count}`}>
+      <Ionicons name="bag-outline" size={24} color="#16765d" />
+      {count > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{count}</Text></View>}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: { padding: 8 },
-  icon: { fontSize: 22 },
-  badge: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    backgroundColor: '#e53935',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  wrap: { padding: 10 },
+  badge: { position: 'absolute', right: 0, top: 0, backgroundColor: '#16765d', borderRadius: 10, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 });
