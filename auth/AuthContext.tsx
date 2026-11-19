@@ -17,7 +17,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       const stored = await getToken();
-      setToken(stored);
+      setToken(stored === 'guest' ? null : stored);
       setIsLoading(false);
     })();
   }, []);
