@@ -23,6 +23,7 @@
       "backgroundColor": "#f2f7f4"
     },
     "web": {
+      "output": "server",
       "favicon": "./assets/pharmacy-icon.png"
     },
     "scheme": "pharmacyshop",
